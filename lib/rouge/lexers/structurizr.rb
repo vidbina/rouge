@@ -13,8 +13,15 @@ module Rouge
         rule /\s+/m, Text::Whitespace
       end
 
+      state :comment do
+        rule /\/\/.*$/, Comment
+        rule /#.*$/, Comment
+        rule %r(\/\*.*\*\/$)m, Comment
+      end
+
       state :root do
         mixin :whitespace
+        mixin :comment
       end
     end
   end
