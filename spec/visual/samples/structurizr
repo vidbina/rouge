@@ -1,0 +1,28 @@
+# From https://github.com/structurizr/dsl/blob/master/docs/language-reference.md
+
+!constant ORGANISATION_NAME "Organisation"
+!constant GROUP_NAME "Group"
+
+workspace {
+
+    model {
+        enterprise "${ORGANISATION_NAME} - ${GROUP_NAME}" {
+            user = person "User"
+        }
+    }
+
+}
+
+
+/*
+    multi-line comment
+*/
+
+
+/* single-line comment */
+
+
+# single line comment
+
+
+// single line comment
