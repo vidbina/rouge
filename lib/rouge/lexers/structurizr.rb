@@ -93,7 +93,7 @@ module Rouge
       end
 
       state :string do
-        rule %r/https?:[^\p{Blank}]*/, Str::Other, :pop!
+        rule %r/https?:[^\p{Blank}]*/, Str::Other
         rule %r/"/, Str::Double, :string_body
       end
 
@@ -127,7 +127,11 @@ module Rouge
         mixin :string
         mixin :identifier
 
-        rule %r/{/, Punctuation, :construct_body
+        rule %r/{/ do
+          token Punctuation
+          pop!
+          push :construct_body
+        end
       end
 
       state :construct_body do
