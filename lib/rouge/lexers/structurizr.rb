@@ -49,7 +49,7 @@ module Rouge
 
       state :identifier do
         mixin :whitespace
-        rule %r/(#{identifier}\b)/, Name::Variable
+        rule %r/(#{identifier})\b/, Name::Variable
       end
 
       state :whitespace do
@@ -64,28 +64,37 @@ module Rouge
 
       state :include do
         mixin :whitespace
-        rule %r/(#{keywords_include.join('|')}\b)(\p{Blank}+)([^\n]+)/i do
+        rule %r/(#{keywords_include.join('|')})\b(\p{Blank}+)([^\n]+)/i do
           groups Keyword, Text::Whitespace, Text
         end
-        rule %r/(#{keywords_doc_include.join('|')}\b)(\p{Blank}+)([^\n]+)/i do
+        rule %r/(#{keywords_doc_include.join('|')})\b(\p{Blank}+)([^\n]+)/i do
           groups Comment, Text::Whitespace, Text
         end
       end
 
-      state :constant do
+      state :constant_def do
         mixin :whitespace
-        rule %r/(!constant\b)(\p{Blank}+)(#{identifier}\b)(\p{Blank}+)/i do
+        rule %r/(!constant)\b(\p{Blank}+)(#{identifier})\b(\p{Blank}+)/i do
           groups Keyword::Declaration, Text::Whitespace, Name::Constant, Text::Whitespace
-          push :constant_value
+          push :value
         end
       end
 
-      state :constant_value do
-        mixin :string
+      state :value do
         rule %r/\n/, Text::Whitespace, :pop!
+        mixin :whitespace
+        mixin :string
+        rule %r/\*/, Str::Symbol
+        rule %r/\b(?:true|false)\b/, Keyword::Constant, :pop!
+        # TODO: Use identifier mixin and explore refactoring for statelessness
+        rule %r/(#{identifier})\b/, Name::Variable, :pop!
+        rule %r/#([a-fA-F0-9]{3,8})\b/, Str::Symbol, :pop!
+        rule %r/-?(?:0|[1-9]\d*)\.\d+(?:e[+-]?\d+)?/i, Num::Float, :pop!
+        rule %r/-?(?:0|[1-9]\d*)(?:e[+-]?\d+)?/i, Num::Integer, :pop!
       end
 
       state :string do
+        rule %r/https?:[^\p{Blank}]*/, Str::Other, :pop!
         rule %r/"/, Str::Double, :string_body
       end
 
@@ -97,27 +106,18 @@ module Rouge
 
       state :string_intp do
         rule %r/}/, Str::Interpol, :pop!
-        rule %r/(#{identifier}\b)/, Name::Variable, :pop!
-      end
-
-      state :property_value do
-        rule %r/(?:true|false\b)/, Keyword::Constant, :pop!
-        # TODO: Use identifier mixin and explore refactoring for statelessness
-        rule %r/(#{identifier}\b)/, Name::Variable, :pop!
-        rule %r/#([a-fA-F0-9]{3,8}\b)/, Str::Symbol, :pop!
-        rule %r/-?(?:0|[1-9]\d*)\.\d+(?:e[+-]?\d+)?/i, Num::Float, :pop!
-        rule %r/-?(?:0|[1-9]\d*)(?:e[+-]?\d+)?/i, Num::Integer, :pop!
+        rule %r/(#{identifier})\b/, Name::Variable, :pop!
       end
 
       state :property do
-        rule %r/(#{identifier}\b)(\p{Blank}*)/i do
+        rule %r/(#{identifier})\b(\p{Blank}*)/i do
           groups Keyword::Declaration, Text::Whitespace
-          push :property_value
+          push :value
         end
       end
 
       state :construct do
-        rule %r/(#{keywords.join('|')}\b)/i, Keyword, :construct_args
+        rule %r/\b(#{keywords.join('|')})\b/i, Keyword::Type, :construct_args
       end
 
       state :construct_args do
@@ -135,7 +135,7 @@ module Rouge
         mixin :whitespace
         mixin :comment
 
-        mixin :constant
+        mixin :constant_def
         mixin :include
 
         mixin :expr
@@ -151,7 +151,7 @@ module Rouge
       state :expr do
         mixin :whitespace
 
-        rule %r/(#{identifier}\b)(\p{Blank}*)(#{operators.join('|')})/i do
+        rule %r/(#{identifier})\b(\p{Blank}*)(#{operators.join('|')})/i do
           groups Keyword::Declaration, Text::Whitespace, Operator
         end
       end
@@ -160,7 +160,7 @@ module Rouge
         mixin :whitespace
         mixin :comment
 
-        mixin :constant
+        mixin :constant_def
         mixin :include
 
         mixin :expr
