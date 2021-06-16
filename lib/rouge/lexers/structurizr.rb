@@ -9,7 +9,6 @@ module Rouge
       tag "structurizr"
       filenames "*.c4", "*.dsl", "*.structurizr"
 
-      # TODO: Handle https://github.com/structurizr/dsl/blob/master/docs/language-reference.md#relationship
       # TODO: Verify all examples parse from https://github.com/structurizr/dsl/tree/master/examples
 
       def self.keywords
@@ -154,6 +153,8 @@ module Rouge
         rule %r/(#{identifier})\b(\p{Blank}*)(#{operators.join('|')})/i do
           groups Keyword::Declaration, Text::Whitespace, Operator
         end
+
+        rule %r/->/, Operator
       end
 
       state :root do
