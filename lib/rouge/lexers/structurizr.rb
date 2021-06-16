@@ -94,7 +94,11 @@ module Rouge
 
       state :string do
         rule %r/https?:[^\p{Blank}]*/, Str::Other
-        rule %r/"/, Str::Double, :string_body
+        rule %r/"/ do
+          token Str::Double
+          pop!
+          push :string_body
+        end
       end
 
       state :string_body do
