@@ -7,7 +7,7 @@ module Rouge
       title "Structurizr"
       desc "The Structurizr DSL (https://github.com/structurizr/dsl)"
       tag "structurizr"
-      filenames "*.dsl"
+      filenames "*.dsl", "*.structurizr"
 
       state :whitespace do
         rule %r/\s+/m, Text::Whitespace
