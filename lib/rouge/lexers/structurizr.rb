@@ -141,10 +141,8 @@ module Rouge
         mixin :construct
         mixin :property
 
-        rule %r/}/ do
-          token Punctuation
-          pop! 2
-        end
+        rule %r/}/, Punctuation, :pop!
+        rule %r/{/, Punctuation, :construct_body
       end
 
       state :expr do
