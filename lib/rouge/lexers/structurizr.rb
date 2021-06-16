@@ -16,7 +16,7 @@ module Rouge
       state :comment do
         rule %r/\/\/.*$/, Comment
         rule %r/#.*$/, Comment
-        rule %r(\/\*.*\*\/$)m, Comment::Multiline
+        rule %r(\/\*.*?\*\/$)m, Comment::Multiline
       end
 
       state :constant do
