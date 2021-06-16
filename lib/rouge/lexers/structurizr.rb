@@ -64,11 +64,15 @@ module Rouge
       end
 
       state :constant_value do
-        rule %r/"/, Str::Double, :string
+        mixin :string
         rule %r/\n/, Text::Whitespace, :pop!
       end
 
       state :string do
+        rule %r/"/, Str::Double, :string_body
+      end
+
+      state :string_body do
         rule %r/[$][{]/, Str::Interpol, :string_intp
         rule %r/"/, Str::Double, :pop!
         rule %r/./, Str
