@@ -18,8 +18,8 @@ module Rouge
         softwareSystemInstance containerInstance healthCheck element tags url
         properties perspectives views systemLandscape systemContext container
         component filtered dynamic deployment custom include exclude autoLayout
-        animation title styles theme themes branding terminology configuration
-        users)
+        animation title styles element relationship theme themes branding
+        terminology configuration users)
       end
 
       def self.keywords_include
