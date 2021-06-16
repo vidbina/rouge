@@ -9,6 +9,17 @@ module Rouge
       tag "structurizr"
       filenames "*.c4", "*.dsl", "*.structurizr"
 
+      def self.keywords_include
+        @keywords_include ||= Set.new %w(!include)
+      end
+
+      def self.keywords_doc_include
+        @keywords_doc_include ||= Set.new %w(!docs !adrs)
+      end
+
+      keywords_include = self.keywords_include
+      keywords_doc_include = self.keywords_doc_include
+
       def self.identifier
         %r([a-zA-Z0-9\-_\.]+)
       end
@@ -32,8 +43,15 @@ module Rouge
 
       state :include do
         mixin :whitespace
-        rule %r/(!include\b)(\p{Blank}+)([^\n]+)/i do
+        rule %r/(#{keywords_include.join('|')}\b)(\p{Blank}+)([^\n]+)/i do
           groups Keyword, Text::Whitespace, Text
+        end
+      end
+
+      state :doc_include do
+        mixin :whitespace
+        rule %r/(#{keywords_doc_include.join('|')}\b)(\p{Blank}+)([^\n]+)/i do
+          groups Comment, Text::Whitespace, Text
         end
       end
 
@@ -72,6 +90,7 @@ module Rouge
 
         mixin :constant
         mixin :include
+        mixin :doc_include
       end
     end
   end
