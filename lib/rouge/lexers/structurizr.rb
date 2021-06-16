@@ -9,6 +9,17 @@ module Rouge
       tag "structurizr"
       filenames "*.dsl", "*.structurizr"
 
+      def self.identifier
+        %r([a-zA-Z0-9\-_\.]+)
+      end
+
+      identifier = self.identifier
+
+      state :identifier do
+        mixin :whitespace
+        rule %r/#{identifier}\b/, Name::Variable
+      end
+
       state :whitespace do
         rule %r/\s+/m, Text::Whitespace
       end
