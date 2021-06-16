@@ -35,6 +35,12 @@ module Rouge
       keywords_include = self.keywords_include
       keywords_doc_include = self.keywords_doc_include
 
+      def self.operators
+        @operators ||= Set.new %w(-> == != =-> = )
+      end
+
+      operators = self.operators
+
       def self.identifier
         %r([a-zA-Z0-9\-_\.]+)
       end
@@ -43,7 +49,7 @@ module Rouge
 
       state :identifier do
         mixin :whitespace
-        rule %r/#{identifier}\b/, Name::Variable
+        rule %r/(#{identifier}\b)/, Name::Variable
       end
 
       state :whitespace do
@@ -61,10 +67,6 @@ module Rouge
         rule %r/(#{keywords_include.join('|')}\b)(\p{Blank}+)([^\n]+)/i do
           groups Keyword, Text::Whitespace, Text
         end
-      end
-
-      state :doc_include do
-        mixin :whitespace
         rule %r/(#{keywords_doc_include.join('|')}\b)(\p{Blank}+)([^\n]+)/i do
           groups Comment, Text::Whitespace, Text
         end
@@ -95,7 +97,23 @@ module Rouge
 
       state :string_intp do
         rule %r/}/, Str::Interpol, :pop!
-        mixin :expr
+        rule %r/(#{identifier}\b)/, Name::Variable, :pop!
+      end
+
+      state :property_value do
+        rule %r/(?:true|false\b)/, Keyword::Constant, :pop!
+        # TODO: Use identifier mixin and explore refactoring for statelessness
+        rule %r/(#{identifier}\b)/, Name::Variable, :pop!
+        rule %r/#([a-fA-F0-9]{3,8}\b)/, Str::Symbol, :pop!
+        rule %r/-?(?:0|[1-9]\d*)\.\d+(?:e[+-]?\d+)?/i, Num::Float, :pop!
+        rule %r/-?(?:0|[1-9]\d*)(?:e[+-]?\d+)?/i, Num::Integer, :pop!
+      end
+
+      state :property do
+        rule %r/(#{identifier}\b)(\p{Blank}*)/i do
+          groups Keyword::Declaration, Text::Whitespace
+          push :property_value
+        end
       end
 
       state :construct do
@@ -104,6 +122,7 @@ module Rouge
 
       state :construct_args do
         rule %r/\n/, Text::Whitespace, :pop!
+        rule %r/\*/, Str::Symbol
 
         mixin :whitespace
         mixin :string
@@ -114,8 +133,14 @@ module Rouge
 
       state :construct_body do
         mixin :whitespace
+        mixin :comment
+
+        mixin :constant
+        mixin :include
+
         mixin :expr
         mixin :construct
+        mixin :property
 
         rule %r/}/ do
           token Punctuation
@@ -123,15 +148,12 @@ module Rouge
         end
       end
 
-      state :expr_left do
+      state :expr do
+        mixin :whitespace
+
         rule %r/(#{identifier}\b)(\p{Blank}*)(#{operators.join('|')})/i do
           groups Keyword::Declaration, Text::Whitespace, Operator
         end
-      end
-
-      state :expr do
-        mixin :whitespace
-        mixin :expr_left
       end
 
       state :root do
@@ -140,8 +162,8 @@ module Rouge
 
         mixin :constant
         mixin :include
-        mixin :doc_include
 
+        mixin :expr
         mixin :construct
       end
     end
