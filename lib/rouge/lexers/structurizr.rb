@@ -30,6 +30,13 @@ module Rouge
         rule %r(\/\*.*?\*\/$)m, Comment::Multiline
       end
 
+      state :include do
+        mixin :whitespace
+        rule %r/(!include\b)(\p{Blank}+)([^\n]+)/i do
+          groups Keyword, Text::Whitespace, Text
+        end
+      end
+
       state :constant do
         mixin :whitespace
         rule %r/(!constant\b)(\p{Blank}+)(#{identifier}\b)(\p{Blank}+)/i do
@@ -64,6 +71,7 @@ module Rouge
         mixin :comment
 
         mixin :constant
+        mixin :include
       end
     end
   end
