@@ -7,7 +7,7 @@ module Rouge
       title "Structurizr"
       desc "The Structurizr DSL (https://github.com/structurizr/dsl)"
       tag "structurizr"
-      filenames "*.dsl", "*.structurizr"
+      filenames "*.c4", "*.dsl", "*.structurizr"
 
       def self.identifier
         %r([a-zA-Z0-9\-_\.]+)
