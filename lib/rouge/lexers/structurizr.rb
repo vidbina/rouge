@@ -32,20 +32,31 @@ module Rouge
 
       state :constant do
         mixin :whitespace
-        rule %r/!constant\b/, Keyword::Declaration, :constant_name
-      end
-
-      state :constant_name do
-        mixin :whitespace
-        rule %r/[a-zA-Z0-9\-_\.]+\b/, Name::Constant, :constant_value
+        rule %r/(!constant\b)(\s+)(#{identifier}\b)(\s+)/ do
+          groups Keyword::Declaration, Text::Whitespace, Name::Constant, Text::Whitespace
+          push :constant_value
+        end
       end
 
       state :constant_value do
+        rule %r/"/, Str::Double, :string
+        rule %r/\n/, Text::Whitespace, :pop!
+      end
+
+      state :string do
+        rule %r/[$][{]/, Str::Interpol, :string_intp
+        rule %r/"/, Str::Double, :pop!
+        rule %r/./, Str
+      end
+
+      state :string_intp do
+        rule %r/}/, Str::Interpol, :pop!
+        mixin :expr_start
+      end
+
+      state :expr_start do
         mixin :whitespace
-        rule %r/".*"/ do
-          token Literal::String
-          pop! 2
-        end
+        mixin :identifier
       end
 
       state :root do
