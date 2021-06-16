@@ -32,7 +32,7 @@ module Rouge
 
       state :constant do
         mixin :whitespace
-        rule %r/(!constant\b)(\s+)(#{identifier}\b)(\s+)/ do
+        rule %r/(!constant\b)(\p{Blank}+)(#{identifier}\b)(\p{Blank}+)/i do
           groups Keyword::Declaration, Text::Whitespace, Name::Constant, Text::Whitespace
           push :constant_value
         end
