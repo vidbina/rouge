@@ -34,14 +34,8 @@ module Rouge
       keywords_include = self.keywords_include
       keywords_doc_include = self.keywords_doc_include
 
-      def self.operators
-        @operators ||= Set.new %w(-> == != =-> = )
-      end
-
-      operators = self.operators
-
       def self.identifier
-        %r([a-zA-Z0-9\-_\.]+)
+        %r(\w+)
       end
 
       identifier = self.identifier
@@ -71,7 +65,7 @@ module Rouge
         end
       end
 
-      state :constant_def do
+      state :constant do
         mixin :whitespace
         rule %r/(!constant)\b(\p{Blank}+)(#{identifier})\b(\p{Blank}+)/i do
           groups Keyword::Declaration, Text::Whitespace, Name::Constant, Text::Whitespace
@@ -93,16 +87,15 @@ module Rouge
       end
 
       state :string do
-        rule %r/https?:[^\p{Blank}]*/, Str::Other
-        rule %r/"/ do
-          token Str::Double
-          pop!
-          push :string_body
-        end
+        rule %r/https?:\S+/, Str::Other
+        rule %r/"/, Str::Double, :string_body
       end
 
       state :string_body do
-        rule %r/[$][{]/, Str::Interpol, :string_intp
+        #rule %r/[$][{]/, Str::Interpol, :string_intp
+        rule %r/($\{)([a-zA-Z0-9-_.]+?)(\})/i do
+          groups Str::Interpol, Name::Variable, Str::Interpol
+        end
         rule %r/"/, Str::Double, :pop!
         rule %r/./, Str
       end
@@ -120,6 +113,8 @@ module Rouge
       end
 
       state :construct do
+        # TODO: Avoid interp
+        # https://github.com/rouge-ruby/rouge/blob/master/docs/LexerDevelopment.md#special-words
         rule %r/\b(#{keywords.join('|')})\b/i, Keyword::Type, :construct_args
       end
 
@@ -134,44 +129,68 @@ module Rouge
         rule %r/{/ do
           token Punctuation
           pop!
-          push :construct_body
+          push :context
         end
       end
 
-      state :construct_body do
+      state :context do
         mixin :whitespace
         mixin :comment
 
-        mixin :constant_def
-        mixin :include
-
-        mixin :expr
-        mixin :construct
-        mixin :property
+        mixin :base
 
         rule %r/}/, Punctuation, :pop!
-        rule %r/{/, Punctuation, :construct_body
+        rule %r/{/, Punctuation, :context
       end
 
-      state :expr do
-        mixin :whitespace
-
-        rule %r/(#{identifier})\b(\p{Blank}*)(#{operators.join('|')})/i do
+      # NOTE: State definitions in line with StructurizrDslParser.java
+      state :assignment do
+        rule %r/(#{identifier})\b(\p{Blank}*)(=)/i do
           groups Keyword::Declaration, Text::Whitespace, Operator
         end
+      end
 
-        rule %r/->/, Operator
+      state :relationship_explicit do
+        rule %r/(#{identifier})\b(\p{Blank}*)(->)/i do
+          groups Keyword::Declaration, Text::Whitespace, Operator
+        end
+      end
+
+      state :relationship_implicit do
+        rule %r/(->)(\p{Blank}*)/i do
+          groups Operator, Text::Whitespace
+        end
+      end
+
+      state :rel do
+        mixin :relationship_explicit
+        mixin :relationship_implicit
+      end
+
+      state :ref do
+        rule %r/(ref)(\p{Blank}+)({)/i do
+          groups Keyword::Declaration, Text::Whitespace, Punctuation
+        end
+
+        rule %r/(ref)(\p{Blank}+)/i, Keyword::Declaration, :construct_args
+      end
+
+      state :base do
+        mixin :whitespace
+        mixin :comment
+
+        mixin :assignment
+        mixin :rel
+        mixin :ref
+
+        mixin :construct
+        mixin :property
+        mixin :include
+        mixin :constant
       end
 
       state :root do
-        mixin :whitespace
-        mixin :comment
-
-        mixin :constant_def
-        mixin :include
-
-        mixin :expr
-        mixin :construct
+        mixin :base
       end
     end
   end
