@@ -4,8 +4,8 @@ Example from https://github.com/structurizr/cli/blob/master/docs/getting-started
 workspace "Getting Started" "This is a model of my software system." {
 
     model {
-        user = person "User" "A user of my software system."
-        softwareSystem = softwareSystem "Software System" "My software system."
+        user = person "User ${USER_NAME}" "A user of my software system."
+        softwareSystem = softwareSystem "${SYSTEM_NAME}" "A Pygments-compatible code highlighter."
 
         user -> softwareSystem "Uses"
     }
